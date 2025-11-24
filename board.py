@@ -13,8 +13,10 @@ class Board:
         self.half_move_counter = 0 #half-moves since the last pawn advance or capture, half moves means move by 1 player
         self.full_move_counter = 0 #Full move meaning move by both players
 
+        self.reversible_moves = 0 #Moves by pieces (not pawns) to empty squares, not sure if this usefull
+        
 
-    #Mailbox representation for 120 and 64 squares
+    #Mailbox representation for 120 and 64 squares for mapping
         self.mailbox120 = [
      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -38,3 +40,10 @@ class Board:
     71, 72, 73, 74, 75, 76, 77, 78,
     81, 82, 83, 84, 85, 86, 87, 88,
     91, 92, 93, 94, 95, 96, 97, 98]
+        
+        #Actual board for storing pieces
+
+        #Initialize it empty, populate from STARTING_FEN
+        self.board = [0] * 64
+
+        
