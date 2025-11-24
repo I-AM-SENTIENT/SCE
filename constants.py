@@ -17,8 +17,7 @@ POS4_MIRRORED_FEN = 'r2q1rk1/pP1p2pp/Q4n2/bbp1p3/Np6/1B3NBn/pPPP1PPP/R3K2R b KQ 
 POS5_FEN = 'rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8'
 POS6_FEN = 'r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10'
 
-
-#Results for fen
+#Results for perft
 
 PERFT_RESULTS = {
     STARTING_FEN: [20, 400, 8902, 197281, 4865609, 119060324],
@@ -30,3 +29,16 @@ PERFT_RESULTS = {
     POS6_FEN: [46, 2079, 89890, 3894594, 164075551],
 }
 
+#Indexes for rows
+
+ROW_8 = [21, 22, 23, 24, 25, 26, 27, 28]
+ROW_7 = [31, 32, 33, 34, 35, 36, 37, 38]
+ROW_6 = [41, 42, 43, 44, 45, 46, 47, 48]
+ROW_5 = [51, 52, 53, 54, 55, 56, 57, 58]
+ROW_4 = [61, 62, 63, 64, 65, 66, 67, 68]
+ROW_3 = [71, 72, 73, 74, 75, 76, 77, 78]
+ROW_2 = [81, 82, 83, 84, 85, 86, 87, 88]
+ROW_1 = [91, 92, 93, 94, 95, 96, 97, 98]
+
+#Pieces symbols
+PIECES = ['r','n','b','q','k','p','P','R','N','B','Q','K']
