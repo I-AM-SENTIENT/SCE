@@ -1,103 +1,83 @@
 from board import Board
 from constants import PIECES
-#Functions that 1 - Take board return FEN, 2 - Take FEN return board
 
-
-
-def fen_to_board(fen):
-    #Get all parts of the FEN
+def fen_to_board(board: Board, fen: str):
     parts = fen.split()
-    #Get the part that contains our possitions of pieces
-    pieces = parts[0].split()
-    #We now get it by row
-    rows = pieces[0].split('/')
-    #FEN starts from the top to bottom meaning from a8 to b8.... and then a7....
-    #Numbers indicate number of empty squars
-    #rows will always have 8 parts and its a list of strings
-    
-    #Now we need to take it part by part where each part represents whats in a row
-    index = 0 #We will be using that to allocate our pieces
+    if not parts:
+        raise ValueError("Empty FEN")
+
+    placement = parts[0]
+    rows = placement.split('/')
+    if len(rows) != 8:
+        raise ValueError("FEN must have 8 ranks")
+
+    board.board_play = [0] * 120
+    index = 0  #0..63 index into mailbox64
     for row in rows:
-        for char in row: #We take each charachter in our row
-            if char.isdigit(): #We start by checking if the char is a number, it indicates amount of empty squares
-                value = int(char)
-                index += value
-            elif char in PIECES:
-                Board.board_play[index] = char #If it's a piece we simply put it on the board
+        for ch in row:
+            if ch.isdigit():
+                index += int(ch)
+            elif ch in PIECES:
+                if index < 0 or index >= 64:
+                    raise ValueError("Piece index out of range while parsing FEN")
+                sq120 = board.mailbox64[index]
+                board.board_play[sq120] = ch
                 index += 1
             else:
-                raise ValueError('CHAR IN ROW NEITHER A NUMBER OR A VALID PIECE')
-    #Now we are done with board and we need to workout the rest of the fen
-    #2[1] part of fen is side to move
-    if parts[1] == 'w':
-        Board.side_to_move = 0
-    elif parts[1] == 'b':
-        Board.side_to_move = 1
+                raise ValueError('Invalid character in FEN piece placement')
+
+    #side to move
+    if len(parts) > 1:
+        if parts[1] == 'w':
+            board.side_to_move = 0
+        elif parts[1] == 'b':
+            board.side_to_move = 1
+        else:
+            raise ValueError("Invalid side to move in FEN")
     else:
-        raise ValueError("FEN SIDE TO MOVE INNCORECT/NOTFOUND")
-    
-    #Now castling
-    castling = parts[2]
-    if 'K' in castling:
-        Board.castle_white_short = 1
-    else:
-        Board.castle_white_short = 0
+        board.side_to_move = 0
 
-    if 'Q' in castling:
-        Board.castle_white_long = 1
-    else:
-        Board.castle_white_long = 0
+    #castling
+    castling = parts[2] if len(parts) > 2 else '-'
+    board.castle_white_short = 1 if 'K' in castling else 0
+    board.castle_white_long = 1 if 'Q' in castling else 0
+    board.castle_black_short = 1 if 'k' in castling else 0
+    board.castle_black_long = 1 if 'q' in castling else 0
 
-    if 'k' in castling:
-        Board.castle_black_short = 1
-    else:
-        Board.castle_black_short = 0
+    #en passant
+    en_passant = parts[3] if len(parts) > 3 else '-'
+    board.en_passant = None if en_passant == '-' else en_passant
 
-    if 'q' in castling:
-        Board.castle_black_long = 1
-    else:
-        Board.castle_black_long = 0
+    #halfmove clock
+    board.half_move_counter = int(parts[4]) if len(parts) > 4 else 0
 
-    #En passant target square, this is given in algebraic soooo it sucks
-    en_passant = parts[3]
-    if en_passant == '-':
-        Board.en_passant = None
-    else:
-        Board.en_passant = en_passant
-    #Half move clock
-    half_move = parts[4]
-    Board.half_move_counter = int(half_move)
-
-    #Full move
-    full_move = parts[5]
-    Board.full_move_counter = int(full_move)
-    
+    #fullmove number
+    board.full_move_counter = int(parts[5]) if len(parts) > 5 else 1
 
 
-def board_to_fen(board):
-    fen = []
-    #Get pieces from board and convert to FEN
-    for row in range(8):
-        empty_count = 0
-        for col in range(8):
-            piece = board.board_play[row * 8 + col]
+def board_to_fen(board: Board) -> str:
+    ranks = []
+    for r in range(8):
+        empty = 0
+        parts = []
+        for c in range(8):
+            idx64 = r * 8 + c
+            sq120 = board.mailbox64[idx64]
+            piece = board.board_play[sq120]
             if piece == 0:
-                empty_count += 1
+                empty += 1
             else:
-                if empty_count > 0:
-                    fen.append(str(empty_count))
-                    empty_count = 0
-                fen.append(piece)
-        if empty_count > 0:
-            fen.append(str(empty_count))
-        if row != 7:
-            fen.append('/')
-    #Side to move
-    if board.side_to_move == 0:
-        fen.append(' w ')
-    else:
-        fen.append(' b ')
-    #Castling rights
+                if empty:
+                    parts.append(str(empty))
+                    empty = 0
+                parts.append(str(piece))
+        if empty:
+            parts.append(str(empty))
+        ranks.append(''.join(parts))
+
+    placement = '/'.join(ranks)
+    side = 'w' if board.side_to_move == 0 else 'b'
+
     castling = ''
     if board.castle_white_short:
         castling += 'K'
@@ -109,16 +89,7 @@ def board_to_fen(board):
         castling += 'q'
     if castling == '':
         castling = '-'
-    fen.append(' ' + castling + ' ')
-    #En passant target square
-    if board.en_passant is None:
-        fen.append('- ')
-    else:
-        fen.append(board.en_passant + ' ') #Assuming en_passant is already in algebraic notation
-    #Half move clock
-    fen.append(str(board.half_move_counter) + ' ')
-    #Full move number
-    fen.append(str(board.full_move_counter))
-    return ''.join(fen)
 
-fen_to_board('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1')
+    en_pass = board.en_passant if board.en_passant is not None else '-'
+
+    return f"{placement} {side} {castling} {en_pass} {board.half_move_counter} {board.full_move_counter}"
