@@ -14,14 +14,14 @@ def fen_to_board(board: Board, fen: str):
     board.board_play = [0] * 120
     index = 0  #0..63 index into mailbox64
     for row in rows:
-        for ch in row:
-            if ch.isdigit():
-                index += int(ch)
-            elif ch in PIECES:
+        for char in row:
+            if char.isdigit():
+                index += int(char)
+            elif char in PIECES:
                 if index < 0 or index >= 64:
                     raise ValueError("Piece index out of range while parsing FEN")
                 sq120 = board.mailbox64[index]
-                board.board_play[sq120] = ch
+                board.board_play[sq120] = char
                 index += 1
             else:
                 raise ValueError('Invalid character in FEN piece placement')
