@@ -3,3 +3,6 @@ __pycache__/board.cpython-313.pyc
 .vscode/settings.json
 __pycache__/fen.cpython-313.pyc
 __pycache__/test_fen.cpython-313-pytest-9.0.1.pyc
+__pycache__
+.pytest_cache
+.vscode
