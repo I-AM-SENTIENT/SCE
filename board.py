@@ -67,4 +67,13 @@ class Board:
             sq120 = self.mailbox64[index64]
             piece = self.board_play[sq120]
             if piece != 0:
-                self.piece_lists[piece].append(sq120)
+                self.piece_list[piece].append(sq120)
+                
+    #Convert algebraic enpassant square to 120 index
+    def en_passant_to_index(self) -> int:
+        if self.en_passant is None:
+            return -1
+        file = ord(self.en_passant[0]) - ord('a')
+        rank = int(self.en_passant[1]) - 1
+        index64 = rank * 8 + file
+        return self.mailbox64[index64]
