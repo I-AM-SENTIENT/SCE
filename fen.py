@@ -54,6 +54,8 @@ def fen_to_board(board: Board, fen: str):
     #fullmove number
     board.full_move_counter = int(parts[5]) if len(parts) > 5 else 1
 
+    board.update_piece_list()
+
 
 def board_to_fen(board: Board) -> str:
     ranks = []
