@@ -43,3 +43,28 @@ class Board:
         
         #Actual board for storing pieces
         self.board_play = [0] * 120
+
+        #Add piece lists for move generation
+        self.piece_list = {
+            'P': [],
+            'N': [],
+            'B': [],
+            'R': [],
+            'Q': [],
+            'K': [],
+            'p': [],
+            'n': [],
+            'b': [],
+            'r': [],
+            'q': [],
+            'k': []}
+    #Function for updating the list 
+    def update_piece_list(self):
+        for key in self.piece_list:
+            self.piece_list[key] = []
+        
+        for index64 in range(64):
+            sq120 = self.mailbox64[index64]
+            piece = self.board_play[sq120]
+            if piece != 0:
+                self.piece_lists[piece].append(sq120)
