@@ -4,8 +4,8 @@ KING_OFFSET = [-10,10,-1,+1,-11,11,-9,9]
 BISHOP_OFFSET = [-11,11,-9,9]
 KNIGHT_OFFSET = [-21,-19,-12,-8,8,12,19,21]
 ROOK_OFFSET = [-10,10,-1,1]
-#pawn offset white
-#pawn offset black
+PAWN_OFFSET_WHITE = [-10,-20,-9,-11]
+PAWN_OFFSET_BLACK = [10,20,9,11]
 
 #FEN's for perft and STARTING_POS
 
