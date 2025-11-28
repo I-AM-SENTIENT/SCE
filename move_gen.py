@@ -169,3 +169,60 @@ def generate_all_moves(board: Board) -> list:
     pseudo_moves.extend(generate_queen_moves(board))
     pseudo_moves.extend(generate_king_moves(board))
     return pseudo_moves 
+
+def king_in_check(board: Board, side: int) -> bool:
+    king = 'K' if side == 0 else 'k'
+    king_sq = board.piece_list[king][0]
+    return is_square_attacked(board, king_sq, 1 - side)
+
+def is_square_attacked(board: Board, sq120: int, by_side: int) -> bool:
+    #Check for pawn attacks
+    pawn = 'P' if by_side == 0 else 'p'
+    pawn_offsets = PAWN_OFFSET_WHITE if by_side == 0 else PAWN_OFFSET_BLACK
+    for offset in pawn_offsets[2:]:
+        attacker_sq = sq120 + offset
+        if board.mailbox120[attacker_sq] != -1 and board.board_play[attacker_sq] == pawn:
+            return True
+
+    #Check for knight attacks
+    knight = 'N' if by_side == 0 else 'n'
+    for offset in KNIGHT_OFFSET:
+        attacker_sq = sq120 + offset
+        if board.mailbox120[attacker_sq] != -1 and board.board_play[attacker_sq] == knight:
+            return True
+
+    #Check for bishop/queen diagonal attacks
+    bishop = 'B' if by_side == 0 else 'b'
+    queen = 'Q' if by_side == 0 else 'q'
+    for offset in BISHOP_OFFSET:
+        target_sq = sq120 + offset
+        while board.mailbox120[target_sq] != -1:
+            target_piece = board.board_play[target_sq]
+            if target_piece == 0:
+                target_sq += offset
+                continue
+            if target_piece == bishop or target_piece == queen:
+                return True
+            break
+
+    #Check for rook/queen straight attacks
+    rook = 'R' if by_side == 0 else 'r'
+    for offset in ROOK_OFFSET:
+        target_sq = sq120 + offset
+        while board.mailbox120[target_sq] != -1:
+            target_piece = board.board_play[target_sq]
+            if target_piece == 0:
+                target_sq += offset
+                continue
+            if target_piece == rook or target_piece == queen:
+                return True
+            break
+
+    #Check for king attacks ?
+    king = 'K' if by_side == 0 else 'k'
+    for offset in KING_OFFSET:
+        attacker_sq = sq120 + offset
+        if board.mailbox120[attacker_sq] != -1 and board.board_play[attacker_sq] == king:
+            return True
+
+    return False
