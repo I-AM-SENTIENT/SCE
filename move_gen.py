@@ -1,5 +1,6 @@
 from board import Board
 from constants import QUEEN_OFFSET,KING_OFFSET,BISHOP_OFFSET,KNIGHT_OFFSET,ROOK_OFFSET,PAWN_OFFSET_BLACK,PAWN_OFFSET_WHITE,ROW_2,ROW_7,ROW_5,ROW_4,ROW_8,ROW_1
+from make_move import make_move, unmake_move
 
 
 def knight_gen(board: Board) -> list: 
@@ -294,3 +295,25 @@ def generate_moves(board: Board) -> list:
     moves.extend(queen_gen(board))
     moves.extend(king_gen(board))
     return moves
+
+def generate_legal_moves(board: Board)-> list:
+    """Generate legal moves(filter out the illegal ones)"""
+    pseudo_moves = generate_moves(board)
+    legal_moves = []
+    for move in pseudo_moves:
+        undo = make_move(board, move)
+        
+        # Find our king and check if it's attacked
+        king = 'K' if board.side_to_move == 1 else 'k'  # Side already switched
+        king_sq = board.piece_list[king][0]
+        attacker = 1 - board.side_to_move  # The side that just moved
+        
+        if not is_square_attacked(board, king_sq, board.side_to_move):
+            legal_moves.append(move)
+        
+        unmake_move(board, undo)
+    
+    return legal_moves
+
+
+
