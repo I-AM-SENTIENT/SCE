@@ -225,64 +225,63 @@ def pawn_gen(board: Board) -> list:
 
 def is_square_attacked(board:Board,square:int,side:int)->bool:
     '''Check if a square is attacked by the GIVEN side'''
-    #We need to check if a square is under attack for castling/ also usefull for king check checking
+    
+    # Pawn attacks
     if side == 0:
-        attackers = {'p','n','b','r','q','k'}
-    if side == 1:
-        attackers = {'P','N','B','R','Q','K'}
-    #We need to check for enemy pieces attacking the square
-    #Pawn attacks
-    if side == 0:
-        pawn_offsets = [9,11]
-        pawn = 'P' #Looking for white pawns
+        pawn_offsets = [9, 11]  # Look below for white pawns
+        pawn = 'P'
     else:
-        pawn_offsets = [-9,-11]
-        pawn = 'p' #Looking for black pawns
+        pawn_offsets = [-9, -11]  # Look above for black pawns
+        pawn = 'p'
     for offset in pawn_offsets:
         target = square + offset
         if board.mailbox120[target] != -1:
             if board.board_play[target] == pawn:
                 return True
-    #Knight attacks
+    
+    # Knight attacks
+    knight = 'N' if side == 0 else 'n'
     for offset in KNIGHT_OFFSET:
         target = square + offset
         if board.mailbox120[target] != -1:
-            if board.board_play[target] == ('N' if side == 0 else 'n'):
+            if board.board_play[target] == knight:
                 return True
-    #Bishop/Queen attacks
+    
+    # Bishop/Queen attacks (diagonal)
+    bishop = 'B' if side == 0 else 'b'
+    queen = 'Q' if side == 0 else 'q'
     for offset in BISHOP_OFFSET:
         target = square + offset
         while board.mailbox120[target] != -1:
             piece = board.board_play[target]
             if piece == 0:
                 target += offset
-            elif piece in attackers:
-                if piece == ('B' if side == 0 else 'b') or piece == ('Q' if side == 0 else 'q'):
-                    return True
-                else:
-                    break
+            elif piece == bishop or piece == queen:
+                return True
             else:
-                break
-    #Rook/Queen attacks
+                break  # Any other piece blocks
+    
+    # Rook/Queen attacks (orthogonal)
+    rook = 'R' if side == 0 else 'r'
     for offset in ROOK_OFFSET:
         target = square + offset
         while board.mailbox120[target] != -1:
             piece = board.board_play[target]
             if piece == 0:
                 target += offset
-            elif piece in attackers:
-                if piece == ('R' if side == 0 else 'r') or piece == ('Q' if side == 0 else 'q'):
-                    return True
-                else:
-                    break
+            elif piece == rook or piece == queen:
+                return True
             else:
-                break
-    #King attacks
+                break  # Any other piece blocks
+    
+    # King attacks
+    king = 'K' if side == 0 else 'k'
     for offset in KING_OFFSET:
         target = square + offset
         if board.mailbox120[target] != -1:
-            if board.board_play[target] == ('K' if side == 0 else 'k'):
+            if board.board_play[target] == king:
                 return True
+    
     return False
 
 def generate_moves(board: Board) -> list:
@@ -303,13 +302,19 @@ def generate_legal_moves(board: Board)-> list:
     for move in pseudo_moves:
         undo = make_move(board, move)
         
-        # Find our king and check if it's attacked
-        king = 'K' if board.side_to_move == 1 else 'k'  # Side already switched
-        king_sq = board.piece_list[king][0]
-        attacker = 1 - board.side_to_move  # The side that just moved
+        #Find our king and check if it's attacked
+        #After make_move, side_to_move has switched, so:
+        #If we were white (0), now it's black's turn (1), our king is 'K'
+        #If we were black (1), now it's white's turn (0), our king is 'k'
+        king = 'K' if board.side_to_move == 1 else 'k'
+        king_positions = board.piece_list[king]
         
-        if not is_square_attacked(board, king_sq, board.side_to_move):
-            legal_moves.append(move)
+        #Check if king still exists (shouldn't be captured in legal position)
+        if king_positions:
+            king_sq = king_positions[0]
+            #Check if opponent (current side_to_move) is attacking our king
+            if not is_square_attacked(board, king_sq, board.side_to_move):
+                legal_moves.append(move)
         
         unmake_move(board, undo)
     
