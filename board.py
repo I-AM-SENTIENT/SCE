@@ -73,7 +73,7 @@ class Board:
     def en_passant_to_index(self) -> int:
         if self.en_passant is None:
             return -1
-        file = ord(self.en_passant[0]) - ord('a')
-        rank = int(self.en_passant[1]) - 1
-        index64 = rank * 8 + file
+        file = ord(self.en_passant[0]) - ord('a')  #0-7
+        rank = int(self.en_passant[1])  #1-8
+        index64 = (8 - rank) * 8 + file
         return self.mailbox64[index64]
