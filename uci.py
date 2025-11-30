@@ -88,17 +88,26 @@ def parse_position(board: Board, tokens: list):
 
 def parse_go(board: Board, tokens: list) -> str:
     """Parse 'go' command and return best move."""
-    #Check for perft
+    from search import search
+    
+    # Check for perft
     if tokens and tokens[0] == 'perft':
         depth = int(tokens[1]) if len(tokens) > 1 else 1
         run_perft_from_uci(board, depth)
         return None
     
-    #For now, just return a random legal move
-    #Later: implement actual search
-    moves = generate_legal_moves(board)
-    if moves:
-        return move_to_uci(moves[0])
+    # Parse depth (default to 4)
+    depth = 4
+    for i, token in enumerate(tokens):
+        if token == 'depth' and i + 1 < len(tokens):
+            depth = int(tokens[i + 1])
+    
+    # Search for best move
+    best_move, score = search(board, depth)
+    
+    if best_move:
+        print(f"info depth {depth} score cp {score}")
+        return move_to_uci(best_move)
     return None
 
 
