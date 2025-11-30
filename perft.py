@@ -1,5 +1,5 @@
 #Functions for performing perft
-from time import time
+import time
 from board import Board
 from fen import fen_to_board
 from move_gen import generate_legal_moves
