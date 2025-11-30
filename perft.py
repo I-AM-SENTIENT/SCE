@@ -1,4 +1,5 @@
 #Functions for performing perft
+from time import time
 from board import Board
 from fen import fen_to_board
 from move_gen import generate_legal_moves
@@ -59,9 +60,13 @@ def run_perft_tests():
             #if depth > 3:  #Limit depth for speed during testing
             #    break
             
+            start_time = time.time()
             result = perft(board, depth)
+            elapsed = time.time() - start_time
+            
             status = "✓" if result == expected else "✗"
-            print(f"  Depth {depth}: {result:>10} (expected {expected:>10}) {status}")
+            nps = int(result / elapsed) if elapsed > 0 else 0
+            print(f"  Depth {depth}: {result:>10} (expected {expected:>10}) {status}  [{elapsed:.3f}s, {nps:,} nps]")
             
             if result != expected:
                 print(f"    MISMATCH! Difference: {result - expected}")
