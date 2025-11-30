@@ -1,7 +1,7 @@
+from uci import uci_loop
+
 def main():
-    pass
-
-
+    uci_loop()
 
 if __name__ == '__main__':
     main()
