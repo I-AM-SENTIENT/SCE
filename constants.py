@@ -43,6 +43,9 @@ ROW_1 = {91, 92, 93, 94, 95, 96, 97, 98}
 #Pieces symbols
 PIECES = ['r','n','b','q','k','p','P','R','N','B','Q','K']
 
+#Stuff for search
+INFINITY = 999999
+MATE_SCORE = 100000
 
 #Stuff for Eval
 PIECE_VALUES = {

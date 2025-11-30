@@ -2,12 +2,7 @@ from board import Board
 from move_gen import generate_legal_moves, is_square_attacked
 from make_move import make_move, unmake_move
 from eval import evaluate
-
-#Constants
-INFINITY = 999999
-MATE_SCORE = 100000
-
-
+from constants import INFINITY, MATE_SCORE
 def negamax(board: Board, depth: int, alpha: int, beta: int) -> int:
     """
     Negamax search with alpha-beta pruning.

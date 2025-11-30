@@ -1,9 +1,6 @@
 from board import Board
 from constants import PIECE_VALUES
 #Piece values in centipawns
-
-
-
 def evaluate(board: Board) -> int:
     """
     Evaluate the position from the perspective of the side to move.
