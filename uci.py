@@ -63,27 +63,29 @@ def uci_to_move(board: Board, uci_str: str) -> tuple:
 
 def parse_position(board: Board, tokens: list):
     """Parse 'position' command."""
-    idx = 0
+    if not tokens:
+        return
+    token_index = 0
     
-    if tokens[idx] == 'startpos':
+    if tokens[token_index] == 'startpos':
         fen_to_board(board, STARTING_FEN)
-        idx += 1
-    elif tokens[idx] == 'fen':
-        idx += 1
+        token_index += 1
+    elif tokens[token_index] == 'fen':
+        token_index += 1
         fen_parts = []
-        while idx < len(tokens) and tokens[idx] != 'moves':
-            fen_parts.append(tokens[idx])
-            idx += 1
+        while token_index < len(tokens) and tokens[token_index] != 'moves':
+            fen_parts.append(tokens[token_index])
+            token_index += 1
         fen_str = ' '.join(fen_parts)
         fen_to_board(board, fen_str)
     
     #Apply moves if present
-    if idx < len(tokens) and tokens[idx] == 'moves':
-        idx += 1
-        while idx < len(tokens):
-            move = uci_to_move(board, tokens[idx])
+    if token_index < len(tokens) and tokens[token_index] == 'moves':
+        token_index += 1
+        while token_index < len(tokens):
+            move = uci_to_move(board, tokens[token_index])
             make_move(board, move)
-            idx += 1
+            token_index += 1
 
 
 def parse_go(board: Board, tokens: list) -> str:
@@ -150,6 +152,8 @@ def uci_loop():
             continue
         
         tokens = line.split()
+        if not tokens:
+            continue
         cmd = tokens[0]
         
         if cmd == 'uci':
@@ -189,10 +193,10 @@ def print_board(board: Board):
     """Print board for debugging."""
     print("\n  +---+---+---+---+---+---+---+---+")
     for rank in range(8):
-        print(f"{8 - rank} |", end="")
+        print(" |", end="")
         for file in range(8):
-            idx64 = rank * 8 + file
-            sq120 = board.mailbox64[idx64]
+            square_index = rank * 8 + file
+            sq120 = board.mailbox64[square_index]
             piece = board.board_play[sq120]
             char = piece if piece != 0 else ' '
             print(f" {char} |", end="")
