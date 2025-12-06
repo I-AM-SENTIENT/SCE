@@ -47,6 +47,13 @@ PIECES = ['r','n','b','q','k','p','P','R','N','B','Q','K']
 INFINITY = 999999
 MATE_SCORE = 100000
 
+#Time management
+DEFAULT_MOVES_TO_GO = 30          # Assume 30 moves left if not specified
+TIME_SAFETY_MARGIN_MS = 50        # Keep buffer to avoid losing on time
+MIN_THINK_TIME_MS = 10            # Never think less than this
+TIME_CHECK_NODES = 2048           # Check time every N nodes
+MAX_SEARCH_DEPTH = 64             # Hard cap on search depth
+
 #Stuff for Eval
 PIECE_VALUES = {
     'P': 100,   'p': -100,
