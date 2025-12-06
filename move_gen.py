@@ -3,15 +3,13 @@ from constants import QUEEN_OFFSET,KING_OFFSET,BISHOP_OFFSET,KNIGHT_OFFSET,ROOK_
 from make_move import make_move, unmake_move
 
 
-def knight_gen(board: Board) -> list: 
+def knight_gen(board: Board, hostile: set) -> list: 
     """Generate a list of moves for knights"""
     moves = []
     if board.side_to_move == 0:
         knight = 'N'
-        hostile = {'p','n','b','r','q','k'}
     elif board.side_to_move == 1:
         knight = 'n'
-        hostile = {'P','N','B','R','Q','K'}
     
     #We get the indices where are knights are from piecelist
     knight_indices = board.piece_list[knight]
@@ -26,15 +24,13 @@ def knight_gen(board: Board) -> list:
                     moves.append((knight_pos, knight_pos + offset))
     return moves
             
-def bishop_gen(board: Board) -> list:
+def bishop_gen(board: Board, hostile: set) -> list:
     """Generate a list of moves for bishops"""
     moves = []
     if board.side_to_move == 0:
         bishop = 'B'
-        hostile = {'p','n','b','r','q','k'}
     elif board.side_to_move == 1:
         bishop = 'b'
-        hostile = {'P','N','B','R','Q','K'}
     bishop_indices = board.piece_list[bishop]
 
     for start in bishop_indices:
@@ -56,15 +52,13 @@ def bishop_gen(board: Board) -> list:
                     break
     return moves
 
-def rook_gen(board: Board)-> list:
+def rook_gen(board: Board, hostile: set)-> list:
     '''Generate a list of moves for rooks'''
     moves = []
     if board.side_to_move == 0:
         rook = 'R'
-        hostile = {'p','n','b','r','q','k'}
     elif board.side_to_move == 1:
         rook = 'r'
-        hostile = {'P','N','B','R','Q','K'}
     rook_indices = board.piece_list[rook]
 
     for start in rook_indices:
@@ -86,16 +80,14 @@ def rook_gen(board: Board)-> list:
                     break
     return moves
 
-def queen_gen(board: Board)-> list:
+def queen_gen(board: Board, hostile: set)-> list:
     '''Generate a list of moves for queen'''
     moves = []
     #Same as rook or bishop
     if board.side_to_move == 0:
         queen = 'Q'
-        hostile = {'p','n','b','r','q','k'}
     elif board.side_to_move == 1:
         queen = 'q'
-        hostile = {'P','N','B','R','Q','K'}
     queen_indices = board.piece_list[queen]
 
     for start in queen_indices:
@@ -117,15 +109,13 @@ def queen_gen(board: Board)-> list:
                     break
     return moves
 
-def king_gen(board: Board)-> list:
+def king_gen(board: Board, hostile: set)-> list:
     """Generate a list of moves for a king"""
     moves = []
     if board.side_to_move == 0:
         king = 'K'
-        hostile = {'p','n','b','r','q','k'}
     elif board.side_to_move == 1:
         king = 'k'
-        hostile = {'P','N','B','R','Q','K'}
     king_indices = board.piece_list[king]
 
     #We start the same with capture/move moves
@@ -157,13 +147,12 @@ def king_gen(board: Board)-> list:
                 moves.append((25,23,'castle_long'))
     return moves
 
-def pawn_gen(board: Board) -> list:
+def pawn_gen(board: Board, hostile: set) -> list:
     '''Generate pawn moves'''
     moves = []
     
     if board.side_to_move == 0:  #White
         pawn = 'P'
-        hostile = {'p','n','b','r','q','k'}
         forward = -10
         start_row = ROW_2
         passant_row = ROW_5
@@ -171,7 +160,6 @@ def pawn_gen(board: Board) -> list:
         capture_offsets = [-9, -11]
     else:  #Black
         pawn = 'p'
-        hostile = {'P','N','B','R','Q','K'}
         forward = 10
         start_row = ROW_7
         passant_row = ROW_4
@@ -286,13 +274,19 @@ def is_square_attacked(board:Board,square:int,side:int)->bool:
 
 def generate_moves(board: Board) -> list:
     """Generates all pseudo-legal moves for the side to move"""
+    # Pre-compute hostile pieces once
+    if board.side_to_move == 0:
+        hostile = {'p','n','b','r','q','k'}
+    else:
+        hostile = {'P','N','B','R','Q','K'}
+    
     moves = []
-    moves.extend(pawn_gen(board))
-    moves.extend(knight_gen(board))
-    moves.extend(bishop_gen(board))
-    moves.extend(rook_gen(board))
-    moves.extend(queen_gen(board))
-    moves.extend(king_gen(board))
+    moves.extend(pawn_gen(board, hostile))
+    moves.extend(knight_gen(board, hostile))
+    moves.extend(bishop_gen(board, hostile))
+    moves.extend(rook_gen(board, hostile))
+    moves.extend(queen_gen(board, hostile))
+    moves.extend(king_gen(board, hostile))
     return moves
 
 def generate_legal_moves(board: Board)-> list:
