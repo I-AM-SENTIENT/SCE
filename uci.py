@@ -1,10 +1,11 @@
 import sys
+import time
 from board import Board
 from fen import fen_to_board, board_to_fen
 from move_gen import generate_legal_moves
 from make_move import make_move
 from perft import perft, index_to_algebraic
-from constants import STARTING_FEN
+from constants import STARTING_FEN, DEFAULT_MOVES_TO_GO, TIME_SAFETY_MARGIN_MS, MIN_THINK_TIME_MS
 
 ENGINE_NAME = "SCE"
 ENGINE_AUTHOR = "I-AM-SENTIENT"
@@ -98,14 +99,68 @@ def parse_go(board: Board, tokens: list) -> str:
         run_perft_from_uci(board, depth)
         return None
     
-    # Parse depth (default to 4)
-    depth = 4
-    for i, token in enumerate(tokens):
-        if token == 'depth' and i + 1 < len(tokens):
+    # Parse time parameters
+    wtime = None
+    btime = None
+    winc = 0
+    binc = 0
+    movestogo = None
+    movetime = None
+    depth = None
+    infinite = False
+    
+    i = 0
+    while i < len(tokens):
+        if tokens[i] == 'wtime' and i + 1 < len(tokens):
+            wtime = int(tokens[i + 1])
+            i += 2
+        elif tokens[i] == 'btime' and i + 1 < len(tokens):
+            btime = int(tokens[i + 1])
+            i += 2
+        elif tokens[i] == 'winc' and i + 1 < len(tokens):
+            winc = int(tokens[i + 1])
+            i += 2
+        elif tokens[i] == 'binc' and i + 1 < len(tokens):
+            binc = int(tokens[i + 1])
+            i += 2
+        elif tokens[i] == 'movestogo' and i + 1 < len(tokens):
+            movestogo = int(tokens[i + 1])
+            i += 2
+        elif tokens[i] == 'movetime' and i + 1 < len(tokens):
+            movetime = int(tokens[i + 1])
+            i += 2
+        elif tokens[i] == 'depth' and i + 1 < len(tokens):
             depth = int(tokens[i + 1])
+            i += 2
+        elif tokens[i] == 'infinite':
+            infinite = True
+            i += 1
+        else:
+            i += 1
+    
+    # Calculate allocated time
+    if movetime is not None:
+        time_to_use = movetime
+    elif infinite:
+        time_to_use = None  # No time limit
+    elif wtime is not None and btime is not None:
+        # Determine our time
+        our_time = wtime if board.side_to_move == 0 else btime
+        our_inc = winc if board.side_to_move == 0 else binc
+        
+        # Moves to go
+        moves_left = movestogo if movestogo else DEFAULT_MOVES_TO_GO
+        
+        # Simple time allocation: remaining_time / moves_left + increment * 0.9
+        time_to_use = max(
+            MIN_THINK_TIME_MS,
+            (our_time // moves_left) + int(our_inc * 0.9) - TIME_SAFETY_MARGIN_MS
+        )
+    else:
+        time_to_use = None
     
     # Search for best move
-    best_move, score = search(board, depth)
+    best_move, score = search(board, depth, time_to_use)
     
     if best_move:
         print(f"info depth {depth} score cp {score}")
