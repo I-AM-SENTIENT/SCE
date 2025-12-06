@@ -25,11 +25,12 @@ def make_move(board: Board, move: tuple) -> dict:
         'full_move_counter': board.full_move_counter,
     }
     
-    piece = board.board_play[from_sq] #Get the piece being moved
-    captured = board.board_play[to_sq] #Get the piece being captured (0 if none)
+    board_play = board.board_play
+    piece_list = board.piece_list
 
+    piece = board_play[from_sq]  #Get the piece being moved
+    captured = board_play[to_sq]  #Get the piece being captured (0 if none)
 
-    #We need to handle flag moves
     #Handle en passant capture
     if flag == 'en_passant':
         if board.side_to_move == 0:  #White captures black pawn
@@ -37,13 +38,19 @@ def make_move(board: Board, move: tuple) -> dict:
         else:  #Black captures white pawn
             captured_pawn_sq = to_sq - 10
         undo['en_passant_captured_sq'] = captured_pawn_sq
-        undo['en_passant_captured_piece'] = board.board_play[captured_pawn_sq]
-        board.board_play[captured_pawn_sq] = 0
-    
+        undo['en_passant_captured_piece'] = board_play[captured_pawn_sq]
+        piece_list[board_play[captured_pawn_sq]].remove(captured_pawn_sq)
+        board_play[captured_pawn_sq] = 0
+
+    #Remove moving and captured pieces from lists
+    piece_list[piece].remove(from_sq)
+    if captured != 0:
+        piece_list[captured].remove(to_sq)
+
     #Move the piece
-    board.board_play[to_sq] = piece
-    board.board_play[from_sq] = 0
-    
+    board_play[from_sq] = 0
+    final_piece = piece
+
     #Handle promotion
     if flag in ('promo_q', 'promo_r', 'promo_b', 'promo_n'):
         promo_pieces = {
@@ -52,23 +59,30 @@ def make_move(board: Board, move: tuple) -> dict:
             'promo_b': 'B' if board.side_to_move == 0 else 'b',
             'promo_n': 'N' if board.side_to_move == 0 else 'n',
         }
-        board.board_play[to_sq] = promo_pieces[flag]
-    
-    #Handle castling - move the rook
+        final_piece = promo_pieces[flag]
+
+    board_play[to_sq] = final_piece
+    piece_list[final_piece].append(to_sq)
+
+    #Handle castling - move the rook and lists
     if flag == 'castle_short':
         if board.side_to_move == 0:  #White
-            board.board_play[96] = board.board_play[98]  #Rook f1 <- h1
-            board.board_play[98] = 0
+            rook_from, rook_to, rook_piece = 98, 96, 'R'
         else:  #Black
-            board.board_play[26] = board.board_play[28]  #Rook f8 <- h8
-            board.board_play[28] = 0
+            rook_from, rook_to, rook_piece = 28, 26, 'r'
+        piece_list[rook_piece].remove(rook_from)
+        board_play[rook_to] = board_play[rook_from]  #Rook f file
+        board_play[rook_from] = 0
+        piece_list[rook_piece].append(rook_to)
     elif flag == 'castle_long':
         if board.side_to_move == 0:  #White
-            board.board_play[94] = board.board_play[91]  #Rook d1 <- a1
-            board.board_play[91] = 0
+            rook_from, rook_to, rook_piece = 91, 94, 'R'
         else:  #Black
-            board.board_play[24] = board.board_play[21]  #Rook d8 <- a8
-            board.board_play[21] = 0
+            rook_from, rook_to, rook_piece = 21, 24, 'r'
+        piece_list[rook_piece].remove(rook_from)
+        board_play[rook_to] = board_play[rook_from]  #Rook d file
+        board_play[rook_from] = 0
+        piece_list[rook_piece].append(rook_to)
     
     #Update en passant square
     if flag == 'double':
@@ -112,9 +126,6 @@ def make_move(board: Board, move: tuple) -> dict:
     #Switch side
     board.side_to_move = 1 - board.side_to_move
     
-    #Update piece list
-    board.update_piece_list()
-    
     return undo
 
 
@@ -124,33 +135,57 @@ def unmake_move(board: Board, undo: dict):
     to_sq = undo['to_sq']
     flag = undo['flag']
     
+    board_play = board.board_play
+    piece_list = board.piece_list
+
     #Switch side back
     board.side_to_move = 1 - board.side_to_move
-    
-    #Restore the moved piece
-    board.board_play[from_sq] = undo['moved_piece']
-    board.board_play[to_sq] = undo['captured_piece']
-    
-    #Handle en passant - restore captured pawn
-    if flag == 'en_passant':
-        board.board_play[undo['en_passant_captured_sq']] = undo['en_passant_captured_piece']
-    
+
+    moved_piece = undo['moved_piece']
+    captured_piece = undo['captured_piece']
+
+    #Remove the piece that currently sits on the destination square
+    current_piece = board_play[to_sq]
+    if current_piece != 0:
+        piece_list[current_piece].remove(to_sq)
+    board_play[to_sq] = 0
+
     #Handle castling - move rook back
     if flag == 'castle_short':
         if board.side_to_move == 0:  #White
-            board.board_play[98] = board.board_play[96]
-            board.board_play[96] = 0
+            rook_from, rook_to, rook_piece = 96, 98, 'R'
         else:  #Black
-            board.board_play[28] = board.board_play[26]
-            board.board_play[26] = 0
+            rook_from, rook_to, rook_piece = 26, 28, 'r'
+        piece_list[rook_piece].remove(rook_from)
+        board_play[rook_to] = board_play[rook_from]
+        board_play[rook_from] = 0
+        piece_list[rook_piece].append(rook_to)
     elif flag == 'castle_long':
         if board.side_to_move == 0:  #White
-            board.board_play[91] = board.board_play[94]
-            board.board_play[94] = 0
+            rook_from, rook_to, rook_piece = 94, 91, 'R'
         else:  #Black
-            board.board_play[21] = board.board_play[24]
-            board.board_play[24] = 0
-    
+            rook_from, rook_to, rook_piece = 24, 21, 'r'
+        piece_list[rook_piece].remove(rook_from)
+        board_play[rook_to] = board_play[rook_from]
+        board_play[rook_from] = 0
+        piece_list[rook_piece].append(rook_to)
+
+    #Restore the moved piece
+    board_play[from_sq] = moved_piece
+    piece_list[moved_piece].append(from_sq)
+
+    #Restore captured piece on destination square
+    board_play[to_sq] = captured_piece
+    if captured_piece != 0:
+        piece_list[captured_piece].append(to_sq)
+
+    #Handle en passant - restore captured pawn
+    if flag == 'en_passant':
+        captured_sq = undo['en_passant_captured_sq']
+        captured_pawn = undo['en_passant_captured_piece']
+        board_play[captured_sq] = captured_pawn
+        piece_list[captured_pawn].append(captured_sq)
+
     #Restore board state
     board.castle_white_short = undo['castle_white_short']
     board.castle_white_long = undo['castle_white_long']
@@ -159,6 +194,3 @@ def unmake_move(board: Board, undo: dict):
     board.en_passant = undo['en_passant']
     board.half_move_counter = undo['half_move_counter']
     board.full_move_counter = undo['full_move_counter']
-    
-    #Update piece list
-    board.update_piece_list()
