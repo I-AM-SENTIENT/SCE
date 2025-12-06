@@ -4,6 +4,8 @@ This test suite evaluates tactical strength of chess engines.
 Each position has a best move that should be found.
 """
 
+import time
+
 from board import Board
 from fen import fen_to_board
 from search import search
@@ -226,6 +228,31 @@ LCT2_POSITIONS = [
 ]
 
 
+# Scoring constants
+BASE_SCORE = 1900
+MAX_PER_POSITION = 30
+
+
+def points_for_position(correct: bool, elapsed_seconds: float) -> int:
+    """Compute LCT2 points for a single position based on time buckets."""
+    if not correct:
+        return 0
+
+    if elapsed_seconds <= 9:
+        return 30
+    if elapsed_seconds <= 29:
+        return 25
+    if elapsed_seconds <= 89:
+        return 20
+    if elapsed_seconds <= 209:
+        return 15
+    if elapsed_seconds <= 389:
+        return 10
+    if elapsed_seconds <= 600:
+        return 5
+    return 0
+
+
 def algebraic_to_move(board: Board, alg: str) -> tuple:
     """
     Convert algebraic notation (like 'Bxc6', 'Ng5') to internal move format.
@@ -284,6 +311,7 @@ def run_lct2_test(depth=5, verbose=True):
     """
     solved = 0
     total = len(LCT2_POSITIONS)
+    position_points = 0
     
     if verbose:
         print(f"Running LCT II Test Suite (depth={depth})")
@@ -294,7 +322,9 @@ def run_lct2_test(depth=5, verbose=True):
         fen_to_board(board, pos["fen"])
         
         # Search for best move
-        best_move, score = search(board, depth)
+        start_time = time.time()
+        best_move, eval_score = search(board, depth)
+        elapsed = time.time() - start_time
         
         if best_move is None:
             if verbose:
@@ -328,18 +358,34 @@ def run_lct2_test(depth=5, verbose=True):
                     correct = False
                     break
         
+        points = points_for_position(correct, elapsed)
+        position_points += points
+
         if correct:
             solved += 1
             if verbose:
-                print(f"Position {pos['id']:2d}: PASS - Found {move_alg} (score: {score})")
+                print(
+                    f"Position {pos['id']:2d}: PASS - Found {move_alg} "
+                    f"(eval: {eval_score}, time: {elapsed:.2f}s, points: {points})"
+                )
         else:
             if verbose:
                 expected_str = '/'.join(pos["best_moves"])
-                print(f"Position {pos['id']:2d}: FAIL - Found {move_alg}, expected {expected_str} (score: {score})")
+                print(
+                    f"Position {pos['id']:2d}: FAIL - Found {move_alg}, expected {expected_str} "
+                    f"(eval: {eval_score}, time: {elapsed:.2f}s, points: {points})"
+                )
     
+    total_points = BASE_SCORE + position_points
+    max_points = BASE_SCORE + len(LCT2_POSITIONS) * MAX_PER_POSITION
+
     if verbose:
         print("=" * 60)
         print(f"Result: {solved}/{total} positions solved ({100*solved/total:.1f}%)")
+        print(
+            f"Score: {total_points} (base {BASE_SCORE} + position points {position_points}); "
+            f"max {max_points}"
+        )
     
     return solved
 
