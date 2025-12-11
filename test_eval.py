@@ -28,7 +28,7 @@ def _describe_breakdown(breakdown: Dict[str, int]) -> str:
 
 
 def test_eval_outputs_and_breakdown():
-    required_keys = {"material", "piece_square", "pawn_structure", "king_safety"}
+    required_keys = {"material", "piece_square", "pawn_structure", "king_safety", "mobility"}
 
     for name, fen in POSITIONS.items():
         board = Board()

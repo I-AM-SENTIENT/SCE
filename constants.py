@@ -148,3 +148,9 @@ KING_SHIELD_BONUS_NEAR = 10   #Pawn one rank in front of king (or behind for bla
 KING_SHIELD_BONUS_FAR = 5     #Pawn two ranks away from king
 KING_SEMI_OPEN_FILE_PENALTY = 10  #No friendly pawn on king file, enemy pawn present
 KING_OPEN_FILE_PENALTY = 6        #No pawns on king file
+
+#Mobility weights (centipawns per available square)
+MOBILITY_KNIGHT = 4
+MOBILITY_BISHOP = 5
+MOBILITY_ROOK = 2
+MOBILITY_QUEEN = 1

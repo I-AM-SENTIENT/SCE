@@ -11,13 +11,17 @@ class SearchState:
         self.start_time = None
         self.allocated_time_ms = None
         self.node_count = 0
+        self.total_nodes = 0  # Total nodes across all depths
         self.should_stop = False
+        self.info_callback = None  # Callback for UCI info output
     
-    def reset(self, allocated_time_ms):
+    def reset(self, allocated_time_ms, info_callback=None):
         self.start_time = time.time() * 1000  # Convert to milliseconds
         self.allocated_time_ms = allocated_time_ms
         self.node_count = 0
+        self.total_nodes = 0
         self.should_stop = False
+        self.info_callback = info_callback
     
     def check_time(self):
         """Check if we've exceeded allocated time."""
@@ -35,6 +39,7 @@ def negamax(board: Board, depth: int, alpha: int, beta: int) -> int:
     """
     # Check time limit periodically
     search_state.node_count += 1
+    search_state.total_nodes += 1
     if search_state.node_count % TIME_CHECK_NODES == 0:
         if search_state.check_time():
             search_state.should_stop = True
@@ -81,15 +86,16 @@ def negamax(board: Board, depth: int, alpha: int, beta: int) -> int:
     return best_score
 
 
-def search(board: Board, depth: int = None, allocated_time_ms: int = None) -> tuple:
+def search(board: Board, depth: int = None, allocated_time_ms: int = None, info_callback=None) -> tuple:
     """
     Search for the best move using iterative deepening.
-    Returns (best_move, score).
+    Returns (best_move, score, depth).
     
     Args:
         board: The board state
         depth: Maximum depth to search (default: MAX_SEARCH_DEPTH)
         allocated_time_ms: Time limit in milliseconds (default: unlimited)
+        info_callback: Optional callback for UCI info output (depth, score, nodes, nps, time_ms)
     """
     moves = generate_legal_moves(board)
     
@@ -100,7 +106,7 @@ def search(board: Board, depth: int = None, allocated_time_ms: int = None) -> tu
         depth = MAX_SEARCH_DEPTH
     
     # Initialize time management
-    search_state.reset(allocated_time_ms)
+    search_state.reset(allocated_time_ms, info_callback)
     
     best_move = moves[0]
     best_score = 0
@@ -137,5 +143,11 @@ def search(board: Board, depth: int = None, allocated_time_ms: int = None) -> tu
             best_move = current_best_move
             best_score = current_best_score
             best_depth = current_depth
+            
+            # Send info after completing this depth
+            if search_state.info_callback:
+                elapsed_ms = (time.time() * 1000) - search_state.start_time
+                nps = int(search_state.total_nodes * 1000 / elapsed_ms) if elapsed_ms > 0 else 0
+                search_state.info_callback(current_depth, current_best_score, search_state.total_nodes, nps, int(elapsed_ms))
     
     return best_move, best_score, best_depth

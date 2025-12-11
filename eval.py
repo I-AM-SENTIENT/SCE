@@ -2,16 +2,24 @@ from typing import Dict, List, Set, Tuple
 
 from board import Board
 from constants import (
+    BISHOP_OFFSET,
     DOUBLED_PAWN_PENALTY,
     ISOLATED_PAWN_PENALTY,
     KING_OPEN_FILE_PENALTY,
     KING_SEMI_OPEN_FILE_PENALTY,
     KING_SHIELD_BONUS_FAR,
     KING_SHIELD_BONUS_NEAR,
+    KNIGHT_OFFSET,
     MIRROR64,
+    MOBILITY_BISHOP,
+    MOBILITY_KNIGHT,
+    MOBILITY_QUEEN,
+    MOBILITY_ROOK,
     PASSED_PAWN_BONUS,
     PIECE_VALUES,
     PST,
+    QUEEN_OFFSET,
+    ROOK_OFFSET,
 )
 
 
@@ -170,19 +178,71 @@ def _king_safety_score(board: Board, pawn_info=None) -> int:
     return score
 
 
+def _count_mobility(board: Board, piece_symbol: str, offsets: list, is_slider: bool) -> int:
+    """Count the number of squares a piece can move to (pseudo-legal mobility)."""
+    count = 0
+    for sq120 in board.piece_list[piece_symbol]:
+        for offset in offsets:
+            target = sq120 + offset
+            if is_slider:
+                # Sliding pieces: count squares until blocked
+                while board.mailbox120[target] != -1:
+                    piece = board.board_play[target]
+                    if piece == 0:
+                        count += 1
+                        target += offset
+                    else:
+                        # Can potentially capture (counts as mobility)
+                        if (piece_symbol.isupper() and piece.islower()) or \
+                           (piece_symbol.islower() and piece.isupper()):
+                            count += 1
+                        break
+            else:
+                # Non-sliding pieces: just check if square is accessible
+                if board.mailbox120[target] != -1:
+                    piece = board.board_play[target]
+                    if piece == 0:
+                        count += 1
+                    elif (piece_symbol.isupper() and piece.islower()) or \
+                         (piece_symbol.islower() and piece.isupper()):
+                        count += 1
+    return count
+
+
+def _mobility_score(board: Board) -> int:
+    """Calculate mobility bonus for all pieces."""
+    score = 0
+    
+    # White pieces
+    score += _count_mobility(board, 'N', KNIGHT_OFFSET, False) * MOBILITY_KNIGHT
+    score += _count_mobility(board, 'B', BISHOP_OFFSET, True) * MOBILITY_BISHOP
+    score += _count_mobility(board, 'R', ROOK_OFFSET, True) * MOBILITY_ROOK
+    score += _count_mobility(board, 'Q', QUEEN_OFFSET, True) * MOBILITY_QUEEN
+    
+    # Black pieces (subtract)
+    score -= _count_mobility(board, 'n', KNIGHT_OFFSET, False) * MOBILITY_KNIGHT
+    score -= _count_mobility(board, 'b', BISHOP_OFFSET, True) * MOBILITY_BISHOP
+    score -= _count_mobility(board, 'r', ROOK_OFFSET, True) * MOBILITY_ROOK
+    score -= _count_mobility(board, 'q', QUEEN_OFFSET, True) * MOBILITY_QUEEN
+    
+    return score
+
+
 def evaluate_with_breakdown(board: Board) -> Tuple[int, Dict[str, int]]:
     pawn_info = _collect_pawns(board)
     material = _material_score(board)
     pst = _piece_square_score(board)
     pawn_structure = _pawn_structure_score(board, pawn_info)
     king_safety = _king_safety_score(board, pawn_info)
+    mobility = _mobility_score(board)
 
-    total = material + pst + pawn_structure + king_safety
+    total = material + pst + pawn_structure + king_safety + mobility
     breakdown = {
         'material': material,
         'piece_square': pst,
         'pawn_structure': pawn_structure,
         'king_safety': king_safety,
+        'mobility': mobility,
     }
 
     if board.side_to_move == 1:

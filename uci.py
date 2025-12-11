@@ -159,11 +159,14 @@ def parse_go(board: Board, tokens: list) -> str:
     else:
         time_to_use = None
     
+    # Define info callback for UCI output during search
+    def uci_info(depth, score, nodes, nps, time_ms):
+        print(f"info depth {depth} score cp {score} nodes {nodes} nps {nps} time {time_ms}")
+    
     # Search for best move
-    best_move, score, search_depth = search(board, depth, time_to_use)
+    best_move, score, search_depth = search(board, depth, time_to_use, uci_info)
     
     if best_move:
-        print(f"info depth {search_depth} score cp {score}")
         return move_to_uci(best_move)
     return None
 
