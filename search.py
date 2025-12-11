@@ -94,7 +94,7 @@ def search(board: Board, depth: int = None, allocated_time_ms: int = None) -> tu
     moves = generate_legal_moves(board)
     
     if not moves:
-        return None, 0
+        return None, 0, 0
     
     if depth is None:
         depth = MAX_SEARCH_DEPTH
@@ -104,6 +104,7 @@ def search(board: Board, depth: int = None, allocated_time_ms: int = None) -> tu
     
     best_move = moves[0]
     best_score = 0
+    best_depth = 0
     
     # Iterative deepening: search depth 1, 2, 3, ... until time runs out
     for current_depth in range(1, depth + 1):
@@ -135,5 +136,6 @@ def search(board: Board, depth: int = None, allocated_time_ms: int = None) -> tu
         if not search_state.should_stop:
             best_move = current_best_move
             best_score = current_best_score
+            best_depth = current_depth
     
-    return best_move, best_score
+    return best_move, best_score, best_depth

@@ -323,7 +323,7 @@ def run_lct2_test(depth=5, verbose=True):
         
         # Search for best move
         start_time = time.time()
-        best_move, eval_score = search(board, depth)
+        best_move, eval_score, _ = search(board, depth)
         elapsed = time.time() - start_time
         
         if best_move is None:

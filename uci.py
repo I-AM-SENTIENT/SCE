@@ -160,10 +160,10 @@ def parse_go(board: Board, tokens: list) -> str:
         time_to_use = None
     
     # Search for best move
-    best_move, score = search(board, depth, time_to_use)
+    best_move, score, search_depth = search(board, depth, time_to_use)
     
     if best_move:
-        print(f"info depth {depth} score cp {score}")
+        print(f"info depth {search_depth} score cp {score}")
         return move_to_uci(best_move)
     return None
 
