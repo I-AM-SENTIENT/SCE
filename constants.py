@@ -42,3 +42,26 @@ ROW_1 = {91, 92, 93, 94, 95, 96, 97, 98}
 
 #Pieces symbols
 PIECES = ['r','n','b','q','k','p','P','R','N','B','Q','K']
+
+#Timing defaults used by the UCI time allocator
+
+DEFAULT_MOVES_TO_GO = 40            #default moves to go when movestogo not provided
+TIME_SAFETY_MARGIN_MS = 50          #ms to subtract as safety slack when allocating time
+MIN_THINK_TIME_MS = 10              #minimum thinking time allocated in ms
+
+#Stuff for eval
+
+PIECE_VALUES = {
+    'P': 100,
+    'N': 320,
+    'B': 330,
+    'R': 500,
+    'Q': 900,
+    'K': 20000,
+    'p': -100,
+    'n': -320,
+    'b': -330,
+    'r': -500,
+    'q': -900,
+    'k': -20000,
+}
